@@ -51,7 +51,7 @@ The scraped data is saved in a CSV file named `raad_van_state_adviezen_<year>.cs
 
 1. Clone the repository:
 ```
-git clone https://github.com/your-username/raad-van-state-scraper.git
+git clone https://github.com/Democratie-Monitor/raad-van-state/raad-van-state-scraper.git
 ```
 2. Install the required dependencies:
 ```
