@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 1. Run the scraper to fetch advices for a specific year (default is 2025):
 ```
-python src/scraper2.py --year 2025
+python src/scraper.py --year 2025
 ```
 Optional arguments:
 - `--test`: Run in test mode to scrape only 10 advices.
@@ -34,7 +34,7 @@ Optional arguments:
 
 2. Run the analyzer to categorize the scraped advices:
 ```
-python src/analyzer2.py data/raad_van_state_adviezen_2025.csv
+python src/analyzer.py data/raad_van_state_adviezen_2025.csv
 ```
 Optional arguments:
 - `--test`: Run in test mode to analyze only 10 advices.
