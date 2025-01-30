@@ -9,21 +9,6 @@ This repository contains a web scraper and analyzer for the Dutch Raad van State
 - Provides reasoning for the categorization
 - Saves the scraped and analyzed data to CSV files
 
-Certainly! Here's an updated version of the README.md file with additional information on the categories and the data being scraped:
-markdown
-
-Copy
-# Raad van State Scraper and Analyzer
-
-This repository contains a web scraper and analyzer for the Dutch Raad van State (Council of State) advices.
-
-## Features
-
-- Scrapes advices from the Raad van State website for a specified year
-- Analyzes the scraped advices and categorizes them based on standard dictum formulations, see categories below
-- Provides reasoning for the categorization
-- Saves the scraped and analyzed data to CSV files
-
 ## Categories
 
 The analyzer categorizes the advices into the following categories based on standard dictum formulations:
@@ -51,7 +36,7 @@ The scraped data is saved in a CSV file named `raad_van_state_adviezen_<year>.cs
 
 1. Clone the repository:
 ```
-git clone https://github.com/Democratie-Monitor/raad-van-state/raad-van-state-scraper.git
+git clone https://github.com/Democratie-Monitor/raad-van-state.git
 ```
 2. Install the required dependencies:
 ```
