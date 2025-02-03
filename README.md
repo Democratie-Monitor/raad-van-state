@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Run the scraper to fetch advices for a specific year (default is 2025):
+### 1. Run the scraper to fetch advices for a specific year (default is 2025):
 ```
 python src/scraper.py --year 2025
 ```
@@ -64,7 +64,7 @@ Optional arguments:
 - `--test`: Run in test mode to scrape only 10 advices.
 - `--year`: Specify the year to scrape advices for (e.g., 2024).
 
-2. Run the analyzer to categorize the scraped advices:
+### 2. Run the analyzer to categorize the scraped advices:
 ```
 python src/analyzer.py data/raad_van_state_adviezen_2025.csv
 ```
@@ -74,7 +74,7 @@ Optional arguments:
 
 This will result in a raad_van_state_adviezen_YYYY_analyzed.csv file
 
-3. Run the date validator to check date fields and format into dd-mm-yyyy:
+### 3. Run the date validator to check date fields and format into dd-mm-yyyy:
 
 This script processes all RvS advice CSV files in the current directory and adds formatted date columns.
 
@@ -87,10 +87,11 @@ No arguments needed - the script will:
 - Create new columns with '_formatted' suffix
 - Prompt for manual input when datum_advies cannot be automatically converted
 
-4. Transfers date information from original RvS advice CSV files to their analyzed counterparts.
+### 4. Transfers date information from original RvS advice CSV files to their analyzed counterparts.
 
-Usage:
+```
 python date_merger.py
+```
 
 No arguments needed - the script will:
 - Find pairs of files like 'raad_van_state_adviezen_YYYY.csv' and 'raad_van_state_adviezen_YYYY_analyzed.csv'
@@ -102,14 +103,17 @@ File requirements:
 - Original files should be named: raad_van_state_adviezen_YYYY.csv
 - Analyzed files should be named: raad_van_state_adviezen_YYYY_analyzed.csv
 
-5. View the scraped and analyzed data in your directory.
+### 5. View the scraped and analyzed data in your directory.
 
-6. Merge all CSV into one giant file
+Do a couple of manual checks to make sure everything went as expected.
+
+### 6. Merge all CSV into one giant file
    
 This script combines all analyzed RvS advice CSV files into a single comprehensive CSV file.
 
-Usage:
+```
 python csv_merger.py
+```
 
 No arguments needed - the script will:
 - Find all files matching '*_analyzed.csv' in the current directory
