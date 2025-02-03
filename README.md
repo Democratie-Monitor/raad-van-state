@@ -87,7 +87,7 @@ No arguments needed - the script will:
 - Create new columns with '_formatted' suffix
 - Prompt for manual input when datum_advies cannot be automatically converted
 
-### 4. Transfers date information from original RvS advice CSV files to their analyzed counterparts.
+### 4. Transfer date information from original RvS advice CSV files to their analyzed counterparts.
 
 ```
 python date_merger.py
