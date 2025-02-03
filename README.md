@@ -1,6 +1,6 @@
 # Raad van State Scraper and Analyzer
 
-This repository contains a web scraper and analyzer for the Dutch Raad van State (Council of State) advices. Replicate serverless LLM API is used, for analysis by Llama3.2.
+This repository contains a web scraper and analyzer for the Dutch Raad van State (Council of State) advices. Replicate serverless LLM API is used, for analysis by Llama3.1-405B-instruct.
 
 ## Features
 
