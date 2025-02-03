@@ -12,7 +12,10 @@ from selenium.common.exceptions import TimeoutException
 import argparse
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 class RaadVanStateScraper:
@@ -20,13 +23,15 @@ class RaadVanStateScraper:
         self.base_url = "https://www.raadvanstate.nl"
         self.batch_size = batch_size
         self.test_mode = test_mode
-        self.year = year or "2025"  # Default to 2025 if no year provided
+        self.year = year or "2025"
 
         # Setup Chrome options
         chrome_options = Options()
-        # Remove headless mode for debugging
         chrome_options.add_argument('--start-maximized')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--no-sandbox')
         chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
         chrome_options.add_experimental_option('useAutomationExtension', False)
 
@@ -40,7 +45,7 @@ class RaadVanStateScraper:
         self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
             "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         })
-        self.driver.implicitly_wait(10)  # Wait up to 10 seconds for elements
+        self.driver.implicitly_wait(10)
 
         if test_mode:
             logger.info("Running in test mode - will only process 10 advices")
@@ -67,19 +72,15 @@ class RaadVanStateScraper:
                 logger.info(f"Navigating to {url}")
                 self.driver.get(url)
 
-                # Add a small initial delay
-                time.sleep(3)
-
-                # Wait for the content to load
+                # Wait for content to load
                 try:
-                    element = WebDriverWait(self.driver, 20).until(
+                    WebDriverWait(self.driver, 20).until(
                         EC.presence_of_element_located((By.CLASS_NAME, "ipx-pt-advies"))
                     )
                     logger.info("Found content on page")
                 except TimeoutException:
                     logger.warning("Timeout waiting for content to load")
                     if attempt == max_retries - 1:
-                        # Take a screenshot for debugging
                         self.driver.save_screenshot(f"error_page_{attempt}.png")
                         logger.info(f"Saved error screenshot to error_page_{attempt}.png")
                         raise
@@ -90,7 +91,7 @@ class RaadVanStateScraper:
                     logger.error(f"Failed to fetch {url}: {e}")
                     raise
                 logger.warning(f"Attempt {attempt + 1} failed, retrying after delay: {e}")
-                time.sleep(2 ** attempt)  # Exponential backoff
+                time.sleep(2 ** attempt)
 
     def parse_overview_page(self, html):
         """Parse the overview page and extract advice URLs"""
@@ -100,7 +101,6 @@ class RaadVanStateScraper:
         results = []
         for entry in entries:
             try:
-                # Find the link to the full advice
                 title_elem = entry.find('h2')
                 if not title_elem:
                     logger.warning("No title element found in entry")
@@ -129,10 +129,44 @@ class RaadVanStateScraper:
         logger.info(f"Found {len(results)} results on page")
         return results
 
+    def get_advice_dates(self):
+        """Extract date metadata from the current page"""
+        dates = {
+            'datum_aanhangig': None,
+            'datum_vaststelling': None,
+            'datum_advies': None,
+            'datum_publicatie': None
+        }
+
+        metadata_map = {
+            'meta-value-datum-aanhangig': 'datum_aanhangig',
+            'meta-value-datum-vaststelling': 'datum_vaststelling',
+            'meta-value-datum-advies': 'datum_advies',
+            'meta-value-datum-publicatie': 'datum_publicatie'
+        }
+
+        found_dates = []
+        for class_name, dict_key in metadata_map.items():
+            try:
+                elements = self.driver.find_elements(By.CLASS_NAME, class_name)
+                if elements:
+                    dates[dict_key] = elements[0].text.strip()
+                    found_dates.append(class_name)
+            except Exception:
+                pass
+
+        if found_dates:
+            logger.info(f"Found dates: {', '.join(found_dates)}")
+        else:
+            logger.warning("No dates found")
+
+        return dates
+
     def get_advice_content(self, url):
         """Get the full text content and metadata of an individual advice"""
         try:
             self.driver.get(url)
+
             # Wait for content to load
             WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.ID, "volledigetekst"))
@@ -150,7 +184,7 @@ class RaadVanStateScraper:
                 logger.warning(f"Could not find kenmerk for {url}: {e}")
                 kenmerk = None
 
-            # Check for specific keywords
+            # Get advice type
             advice_type = None
             try:
                 keywords_ul = self.driver.find_element(By.CLASS_NAME, "trefwoorden")
@@ -167,10 +201,14 @@ class RaadVanStateScraper:
             except Exception as e:
                 logger.warning(f"Could not find keywords for {url}: {e}")
 
+            # Get dates
+            dates = self.get_advice_dates()
+
             return {
                 'content': content,
                 'reference': kenmerk,
-                'advice_type': advice_type
+                'advice_type': advice_type,
+                **dates  # Unpack all date fields
             }
 
         except Exception as e:
@@ -178,7 +216,11 @@ class RaadVanStateScraper:
             return {
                 'content': None,
                 'reference': None,
-                'advice_type': None
+                'advice_type': None,
+                'datum_aanhangig': None,
+                'datum_vaststelling': None,
+                'datum_advies': None,
+                'datum_publicatie': None
             }
 
     def scrape(self):
@@ -199,7 +241,6 @@ class RaadVanStateScraper:
                     logger.info("No results found on page, stopping")
                     break
 
-                # In test mode, only take the first 10 results
                 if self.test_mode:
                     remaining = 10 - len(all_results)
                     if remaining > 0:
@@ -207,17 +248,15 @@ class RaadVanStateScraper:
                     else:
                         break
 
-                # Get full text and metadata for each advice
                 for result in page_results:
-                    time.sleep(2)  # Be nice to the server
+                    time.sleep(1)  # Reduced delay between requests
                     advice_data = self.get_advice_content(result['url'])
-                    result.update(advice_data)  # Add content and reference to result
+                    result.update(advice_data)
                     processed_advices += 1
                     logger.info(f"Processed advice {processed_advices}: {result['reference']}")
 
                 all_results.extend(page_results)
 
-                # Check if we've reached the last page (fewer entries than batch size)
                 if len(page_results) < self.batch_size:
                     logger.info("Reached the last page with fewer entries than batch size")
                     break
@@ -227,7 +266,7 @@ class RaadVanStateScraper:
                     break
 
                 page += 1
-                time.sleep(2)  # Be nice to the server between pages
+                time.sleep(1)
 
             except Exception as e:
                 logger.error(f"Error processing page {page}: {e}")
